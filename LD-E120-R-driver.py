@@ -1,49 +1,32 @@
 #!/usr/bin/env python3
+# pacecat_viewer_uuid.py — финальная версия + запрос UUID по команде LUUIDH
 
 import serial
 import struct
 import numpy as np
 import matplotlib.pyplot as plt
-from matplotlib.colors import hsv_to_rgb
 import argparse
 import sys
 import signal
-
-## FRAME
-## [HEADER   ] [ANGLE x10] [SIGNATURE] [30 PTS] [TAIL]
-## CF FA 1E 00    B4 00       B4 00    D1 D2 D3
-## fixed           180        fixed    24 bits
-
-## TAIL
-## [SIGNATURE] [INCREMENT] [SIGNATURE]
-## 53 54 13 00     16       1A 45 44
-##    fixed      unknown     fixed
+import time
 
 def main():
-    parser = argparse.ArgumentParser(
-        description="PaceCat LDS-E120-R demo",
-        formatter_class=argparse.RawDescriptionHelpFormatter,
-        epilog="""How to use:
-  %(prog)s -p COM3
-  %(prog)s --port /dev/ttyUSB0 --baud 230400"""
-    )
+    parser = argparse.ArgumentParser(description="PaceCat LDS-E120-R — Rainbow by Intensity + LUUIDH command")
     parser.add_argument('-p', '--port', default='COM3', help='Serial port (default: COM3)')
     parser.add_argument('-b', '--baud', type=int, default=230400, help='Baud rate (default: 230400)')
     args = parser.parse_args()
 
     try:
-        ser = serial.Serial(args.port, args.baud, timeout=None)
+        ser = serial.Serial(args.port, args.baud, timeout=1.0)  # timeout нужен для чтения ответа
         print(f"[OK] Connected {args.port} @ {args.baud} baud")
     except serial.SerialException as e:
         print(f"[ERROR] cannot open port {args.port}: {e}")
         sys.exit(1)
 
-    HEADER = b'\xCF\xFA\x1E\x00'
+    HEADER = b'\xCF\xFA'
     FRAME_BASE_LEN = 100
     TAIL_LEN = 8
-    SCALE = 256
     ANGLE_INC = 0.6
-    POINTS_COUNT = 30
     MIN_RANGE = 50
     MAX_RANGE = 12000
     MAX_DISPLAY_DIST = 5000
@@ -51,12 +34,120 @@ def main():
     buffer = bytearray()
     full_scans = 0
 
+    # === ОТПРАВКА КОМАНДЫ LUUIDH ===
+    print("[INFO] Sending command: LUUIDH")
+    ser.write(b'LUUIDH\r\n')  # многие лидары ожидают CR+LF
+    time.sleep(0.1)
+
+    # Читаем ответ (обычно до 100 байт)
+    response = ser.read(100)
+    if response:
+        print(f"[RESPONSE] Raw: {response}")
+        try:
+            print(f"[RESPONSE] Text: {response.decode('utf-8', errors='ignore').strip()}")
+        except:
+            print("[RESPONSE] <binary or unreadable>")
+    else:
+        print("[WARNING] No response to LUUIDH")
+
+    print("[INFO] Sending command: LTYPEH")
+    ser.write(b'LTYPEH\r\n')  # многие лидары ожидают CR+LF
+    time.sleep(0.1)
+
+    # Читаем ответ (обычно до 100 байт)
+    response = ser.read(100)
+    if response:
+        print(f"[RESPONSE] Raw: {response}")
+        try:
+            print(f"[RESPONSE] Text: {response.decode('utf-8', errors='ignore').strip()}")
+        except:
+            print("[RESPONSE] <binary or unreadable>")
+    else:
+        print("[WARNING] No response to LTYPEH")
+
+    print("[INFO] Sending command: LXVERH")
+    ser.write(b'LXVERH\r\n')  # многие лидары ожидают CR+LF
+    time.sleep(0.1)
+
+    # Читаем ответ (обычно до 100 байт)
+    response = ser.read(100)
+    if response:
+        print(f"[RESPONSE] Raw: {response}")
+        try:
+            print(f"[RESPONSE] Text: {response.decode('utf-8', errors='ignore').strip()}")
+        except:
+            print("[RESPONSE] <binary or unreadable>")
+    else:
+        print("[WARNING] No response to LXVERH")
+
+    print("[INFO] Sending command: LVERSH")
+    ser.write(b'LVERSH\r\n')  # многие лидары ожидают CR+LF
+    time.sleep(0.1)
+
+    # Читаем ответ (обычно до 100 байт)
+    response = ser.read(100)
+    if response:
+        print(f"[RESPONSE] Raw: {response}")
+        try:
+            print(f"[RESPONSE] Text: {response.decode('utf-8', errors='ignore').strip()}")
+        except:
+            print("[RESPONSE] <binary or unreadable>")
+    else:
+        print("[WARNING] No response to LVERSH")
+
+    print("[INFO] Sending command: LSTOPH")
+    ser.write(b'LSTOPH\r\n')  # многие лидары ожидают CR+LF
+    time.sleep(0.1)
+
+    # Читаем ответ (обычно до 100 байт)
+    response = ser.read(100)
+    if response:
+        print(f"[RESPONSE] Raw: {response}")
+        try:
+            print(f"[RESPONSE] Text: {response.decode('utf-8', errors='ignore').strip()}")
+        except:
+            print("[RESPONSE] <binary or unreadable>")
+    else:
+        print("[WARNING] No response to LSTOPH")
+    time.sleep(0.5)
+
+    print("[INFO] Sending command: LSTARH")
+    ser.write(b'LSTARH\r\n')  # многие лидары ожидают CR+LF
+    time.sleep(0.1)
+
+    # Читаем ответ (обычно до 100 байт)
+    response = ser.read(100)
+    if response:
+        print(f"[RESPONSE] Raw: {response}")
+        try:
+            print(f"[RESPONSE] Text: {response.decode('utf-8', errors='ignore').strip()}")
+        except:
+            print("[RESPONSE] <binary or unreadable>")
+    else:
+        print("[WARNING] No response to LSTARH")
+
+    print("[INFO] Sending command: LSRPM:400H")
+    ser.write(b'LSRPM:400H\r\n')  # многие лидары ожидают CR+LF
+    time.sleep(0.1)
+
+    # Читаем ответ (обычно до 100 байт)
+    response = ser.read(100)
+    if response:
+        print(f"[RESPONSE] Raw: {response}")
+        try:
+            print(f"[RESPONSE] Text: {response.decode('utf-8', errors='ignore').strip()}")
+        except:
+            print("[RESPONSE] <binary or unreadable>")
+    else:
+        print("[WARNING] No response to LSRPM:400H")
+
+    # === Визуализация ===
     plt.ion()
     fig, ax = plt.subplots(figsize=(10, 10))
     ax.set_xlim(-MAX_DISPLAY_DIST, MAX_DISPLAY_DIST)
     ax.set_ylim(-MAX_DISPLAY_DIST, MAX_DISPLAY_DIST)
     ax.set_aspect('equal')
-    ax.set_title("PaceCat LDS-E120-R (600 pts/scan)", fontsize=16)
+    ax.set_title("PaceCat LDS-E120-R — Rainbow by Intensity (d0)", fontsize=16)
 
     # Сетка
     ax.set_xticks(np.arange(-MAX_DISPLAY_DIST, MAX_DISPLAY_DIST + 1, 100), minor=True)
@@ -67,24 +158,23 @@ def main():
     ax.grid(True, which='major', color='#999999', linewidth=1.0, alpha=0.9)
     ax.tick_params(which='minor', labelbottom=False, labelleft=False)
 
-    scatter = ax.scatter([], [], s=8, c=[], alpha=0.9)
-    line, = ax.plot([], [], color='black', linewidth=1.0, alpha=0.6)
+    scatter = ax.scatter([], [], s=10, c=[], cmap='rainbow', vmin=0, vmax=255, alpha=0.9)
+    line, = ax.plot([], [], color='black', linewidth=0.8, alpha=0.5)
 
-    x_buf, y_buf, hue_buf = [], [], []
+    x_buf, y_buf, intensity_buf = [], [], []
 
-    print("PaceCat LDS-E120-R is running. Close window or Ctrl+C to quit.\n")
+    print("\nPaceCat LDS-E120-R — running. Close window or Ctrl+C to quit.\n")
 
-    # Флаг завершения
     running = True
 
     def close_handler(event):
         nonlocal running
-        print("\n[INFO] Window is closed - stopping...")
+        print("\n[INFO] Window closed — stopping...")
         running = False
 
     def signal_handler(signum, frame):
         nonlocal running
-        print("\n[INFO] Received Ctrl+C - stopping...")
+        print("\n[INFO] Ctrl+C — stopping...")
         running = False
 
     fig.canvas.mpl_connect('close_event', close_handler)
@@ -92,7 +182,7 @@ def main():
 
     try:
         while running:
-            data = ser.read(1024)
+            data = ser.read(2048)
             if data:
                 buffer.extend(data)
 
@@ -115,11 +205,12 @@ def main():
                 frame = buffer[pos: pos + frame_len]
                 buffer = buffer[pos + frame_len:]
 
-                for i in range(POINTS_COUNT):
+                for i in range(30):
                     off = 8 + i * 3
-                    d0, d1, d2 = frame[off], frame[off+1], frame[off+2]
-                    raw = d0 + (d1 << 8) + (d2 << 16)
-                    dist_mm = raw // SCALE
+                    intensity = frame[off]           # d0 — intensity
+                    d1 = frame[off + 1]
+                    d2 = frame[off + 2]
+                    dist_mm = d1 + (d2 << 8)          # миллиметры напрямую
 
                     angle_deg = sector_deg + i * ANGLE_INC
                     rad = np.radians(angle_deg)
@@ -129,7 +220,7 @@ def main():
                         y = dist_mm * np.sin(rad)
                         x_buf.append(x)
                         y_buf.append(y)
-                        hue_buf.append(angle_deg % 360)
+                        intensity_buf.append(intensity)
 
                 if is_zero:
                     full_scans += 1
@@ -139,15 +230,14 @@ def main():
 
                     if x_buf:
                         scatter.set_offsets(np.c_[x_buf, y_buf])
-                        colors = [hsv_to_rgb([h/360, 1.0, 1.0]) for h in hue_buf]
-                        scatter.set_color(colors)
+                        scatter.set_array(np.array(intensity_buf))
                         line.set_data(x_buf, y_buf)
                         fig.canvas.draw_idle()
                         fig.canvas.flush_events()
 
                     x_buf.clear()
                     y_buf.clear()
-                    hue_buf.clear()
+                    intensity_buf.clear()
 
     except Exception as e:
         print(f"[ERROR] {e}")

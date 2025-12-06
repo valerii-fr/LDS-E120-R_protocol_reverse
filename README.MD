@@ -25,27 +25,29 @@
 
 **Packet layout (bytes):**
 
-| Offset | Size | Content | Note |
-| --- | --- | --- | --- |
-| 0–3 | 4 | Header | CF FA 1E 00 (fixed) |
-| 4–5 | 2 | Sector start angle × 0.1° | little-endian uint16 |
-| 6–7 | 2 | Signature | B4 00 (fixed) |
-| 8–97 | 90 | 30 points × 3 bytes | see below |
-| 98–99 | 2 | Reserved | unused |
-| 100–107 | 8 | Tail (final packet only) | 53 54 13 00 XX 1A 45 44 |
+| Offset  | Size | Content                   | Note                    |
+|---------|------|---------------------------|-------------------------|
+| 0–1     | 2    | Header                    | CF FA (fixed)           |
+| 2       | 1    | Points count              | 1E (seems to be fixed)  |
+| 3       | 1    | Padding                   | 00 (fixed)              |
+| 4–5     | 2    | Sector start angle × 0.1° | little-endian uint16    |
+| 6–7     | 2    | Signature                 | B4 00 (fixed)           |
+| 8–97    | 90   | 30 points × 3 bytes       | see below               |
+| 98–99   | 2    | Reserved                  | unused                  |
+| 100–107 | 8    | Tail (final packet only)  | 53 54 13 00 XX 1A 45 44 |
 
 ### 3. Point Format (3 bytes, offset 8 + i×3)
 
-| Byte | Meaning |
-| --- | --- |
-| 0 | High 8 bits of distance |
-| 1 | Middle 8 bits of distance |
-| 2 | Low 8 bits of distance |
+| Byte | Meaning                 |
+| --- |-------------------------|
+| 0 | Intensity               |
+| 1 | Low 8 bits of distance  |
+| 2 | High 8 bits of distance |
 
-**Distance calculation (24-bit little-endian):**
+**Distance calculation (16-bit little-endian):**
 
 ```jsx
-uint32_t raw = byte0 + (byte1 << 8) + (byte2 << 16);uint16_t distance_mm = raw >> 8;   *// equivalent to raw / 256*
+uint32_t distance_mm = byte0 << 8 + (byte2 << 8);
 ```
 
 **Range:** 50 – 12000 mm (0.05 – 12 m)
