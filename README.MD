@@ -3,9 +3,11 @@
 **pacecat_viewer.py — Technical Specification**
 
 **Version:** 1.0 (December 2025)
-**Reverse-engineered by:** anonymous
+
 **Lidar model:** PaceCat LDS-E120-R
+
 **Interface:** UART TTL 3.3 V
+
 **Status:** fully functional, verified in real-time
 
 ### 1. Physical Layer Parameters
