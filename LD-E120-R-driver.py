@@ -10,6 +10,16 @@ import sys
 import signal
 import time
 
+def send_cmd(ser, cmd):
+    ser.write(f"{cmd}\r\n".encode())
+    time.sleep(0.15)
+    resp = ser.read(256)
+    if resp:
+        text = resp.decode('utf-8', errors='ignore').strip()
+        print(f"[→] {cmd} → {text}")
+    else:
+        print(f"[→] {cmd} → <no response>")
+
 def main():
     parser = argparse.ArgumentParser(description="PaceCat LDS-E120-R — Rainbow by Intensity + LUUIDH command")
     parser.add_argument('-p', '--port', default='COM3', help='Serial port (default: COM3)')
@@ -34,120 +44,20 @@ def main():
     buffer = bytearray()
     full_scans = 0
 
-    # === ОТПРАВКА КОМАНДЫ LUUIDH ===
-    print("[INFO] Sending command: LUUIDH")
-    ser.write(b'LUUIDH\r\n')  # многие лидары ожидают CR+LF
-    time.sleep(0.1)
+    print("\n[INFO] LiDAR init...")
+    send_cmd(ser, "LSTOPH")
+    send_cmd(ser, "LUUIDH")
+    send_cmd(ser, "LXVERH")
+    send_cmd(ser, "LTYPEH")
+    send_cmd(ser, "LSRPM:400H")  # 400 RPM
+    send_cmd(ser, "LSTARH")
 
-    # Читаем ответ (обычно до 100 байт)
-    response = ser.read(100)
-    if response:
-        print(f"[RESPONSE] Raw: {response}")
-        try:
-            print(f"[RESPONSE] Text: {response.decode('utf-8', errors='ignore').strip()}")
-        except:
-            print("[RESPONSE] <binary or unreadable>")
-    else:
-        print("[WARNING] No response to LUUIDH")
-
-    print("[INFO] Sending command: LTYPEH")
-    ser.write(b'LTYPEH\r\n')  # многие лидары ожидают CR+LF
-    time.sleep(0.1)
-
-    # Читаем ответ (обычно до 100 байт)
-    response = ser.read(100)
-    if response:
-        print(f"[RESPONSE] Raw: {response}")
-        try:
-            print(f"[RESPONSE] Text: {response.decode('utf-8', errors='ignore').strip()}")
-        except:
-            print("[RESPONSE] <binary or unreadable>")
-    else:
-        print("[WARNING] No response to LTYPEH")
-
-    print("[INFO] Sending command: LXVERH")
-    ser.write(b'LXVERH\r\n')  # многие лидары ожидают CR+LF
-    time.sleep(0.1)
-
-    # Читаем ответ (обычно до 100 байт)
-    response = ser.read(100)
-    if response:
-        print(f"[RESPONSE] Raw: {response}")
-        try:
-            print(f"[RESPONSE] Text: {response.decode('utf-8', errors='ignore').strip()}")
-        except:
-            print("[RESPONSE] <binary or unreadable>")
-    else:
-        print("[WARNING] No response to LXVERH")
-
-    print("[INFO] Sending command: LVERSH")
-    ser.write(b'LVERSH\r\n')  # многие лидары ожидают CR+LF
-    time.sleep(0.1)
-
-    # Читаем ответ (обычно до 100 байт)
-    response = ser.read(100)
-    if response:
-        print(f"[RESPONSE] Raw: {response}")
-        try:
-            print(f"[RESPONSE] Text: {response.decode('utf-8', errors='ignore').strip()}")
-        except:
-            print("[RESPONSE] <binary or unreadable>")
-    else:
-        print("[WARNING] No response to LVERSH")
-
-    print("[INFO] Sending command: LSTOPH")
-    ser.write(b'LSTOPH\r\n')  # многие лидары ожидают CR+LF
-    time.sleep(0.1)
-
-    # Читаем ответ (обычно до 100 байт)
-    response = ser.read(100)
-    if response:
-        print(f"[RESPONSE] Raw: {response}")
-        try:
-            print(f"[RESPONSE] Text: {response.decode('utf-8', errors='ignore').strip()}")
-        except:
-            print("[RESPONSE] <binary or unreadable>")
-    else:
-        print("[WARNING] No response to LSTOPH")
-    time.sleep(0.5)
-
-    print("[INFO] Sending command: LSTARH")
-    ser.write(b'LSTARH\r\n')  # многие лидары ожидают CR+LF
-    time.sleep(0.1)
-
-    # Читаем ответ (обычно до 100 байт)
-    response = ser.read(100)
-    if response:
-        print(f"[RESPONSE] Raw: {response}")
-        try:
-            print(f"[RESPONSE] Text: {response.decode('utf-8', errors='ignore').strip()}")
-        except:
-            print("[RESPONSE] <binary or unreadable>")
-    else:
-        print("[WARNING] No response to LSTARH")
-
-    print("[INFO] Sending command: LSRPM:400H")
-    ser.write(b'LSRPM:400H\r\n')  # многие лидары ожидают CR+LF
-    time.sleep(0.1)
-
-    # Читаем ответ (обычно до 100 байт)
-    response = ser.read(100)
-    if response:
-        print(f"[RESPONSE] Raw: {response}")
-        try:
-            print(f"[RESPONSE] Text: {response.decode('utf-8', errors='ignore').strip()}")
-        except:
-            print("[RESPONSE] <binary or unreadable>")
-    else:
-        print("[WARNING] No response to LSRPM:400H")
-
-    # === Визуализация ===
     plt.ion()
     fig, ax = plt.subplots(figsize=(10, 10))
     ax.set_xlim(-MAX_DISPLAY_DIST, MAX_DISPLAY_DIST)
     ax.set_ylim(-MAX_DISPLAY_DIST, MAX_DISPLAY_DIST)
     ax.set_aspect('equal')
-    ax.set_title("PaceCat LDS-E120-R — Rainbow by Intensity (d0)", fontsize=16)
+    ax.set_title("PaceCat LDS-E120-R", fontsize=16)
 
     # Сетка
     ax.set_xticks(np.arange(-MAX_DISPLAY_DIST, MAX_DISPLAY_DIST + 1, 100), minor=True)
@@ -163,18 +73,18 @@ def main():
 
     x_buf, y_buf, intensity_buf = [], [], []
 
-    print("\nPaceCat LDS-E120-R — running. Close window or Ctrl+C to quit.\n")
+    print("\nPaceCat LDS-E120-R is running. Close window or Ctrl+C to quit.\n")
 
     running = True
 
     def close_handler(event):
         nonlocal running
-        print("\n[INFO] Window closed — stopping...")
+        print("\n[INFO] Window closed, stopping...")
         running = False
 
     def signal_handler(signum, frame):
         nonlocal running
-        print("\n[INFO] Ctrl+C — stopping...")
+        print("\n[INFO] Ctrl+C, stopping...")
         running = False
 
     fig.canvas.mpl_connect('close_event', close_handler)

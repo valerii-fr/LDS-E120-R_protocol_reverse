@@ -91,7 +91,24 @@ if (distance_mm < 50 || distance_mm > 12000)    discard point
 - Closing the Matplotlib window
 - Ctrl+C in terminal
 
-### 9. Note
+### 9. Commands
+
+**PaceCat LDS-E120-R Command Set (verified on real hardware, December 2025)**
+
+| Command | Response (example) | Purpose | Working |
+| --- | --- | --- | --- |
+| LSTOPH | LiDAR STOP! | Stop scanning | Yes |
+| LSTARH | LiDAR START! | Start scanning | Yes |
+| LUUIDH | PRODUCT SN:LDS-E120-R_A
+LUUIDH OK | Query product serial number | Yes |
+| LXVERH | MCU VERSION: 0004 <br> MOTOR VERSION: V1.6_230613_R <br> MOTOR HVERSION: V2.2_230223_A <br> CHIPID: 982D534D4C344B0659583141 <br> LXVERH OK | Query firmware and hardware versions | Yes |
+| LTYPEH | TYPE ID:LDS-E120-R | Query model identifier | Yes |
+| LSRPM:XXXH | LSRPM:400H OK (example) | Set motor speed in RPM (e.g. 400) | Yes* |
+- Note: The RPM command is accepted and the motor speed changes, but the data packet format (30 points per sector, 0.6° step) remains unchanged on the tested firmware revision. This can cause points cloud shifts and corrupted map.
+- Works well @ 400 RPM
+- All commands are terminated with \r\n. The lidar responds with human-readable text followed by OK (or an error message).
+
+### 10. Note
 
 All protocol parameters (packet structure, distance scaling, angular step, tail format) were derived exclusively from analysis of the real UART stream of the PaceCat LDS-E120-R lidar.
 No external assumptions or third-party data were used (because it doesn’t exist).
